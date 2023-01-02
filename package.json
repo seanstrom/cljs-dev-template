@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "cljs-dev": "shadow-cljs watch :app",
+    "js-dev": "parcel serve -p 9090 src/index.html"
   },
   "keywords": [],
   "author": "",
