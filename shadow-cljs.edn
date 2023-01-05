@@ -1,6 +1,5 @@
 {:source-paths ["src"]
  :dependencies []
- :builds {:app {:output-dir "./.parcel-cache/cljs-dist"
-                :target :esm
-                :asset-path "."
-                :modules {:main {:init-fn app.main/init}}}}}
+ :builds {:app {:output-dir "./cljs-dist"
+                :target :npm-module
+                :entries [app.main]}}}
