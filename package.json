@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "cljs-dev": "shadow-cljs watch :app",
     "js-dev": "parcel serve -p 1255 src/index.html"
