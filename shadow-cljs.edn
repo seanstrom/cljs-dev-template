@@ -1,5 +1,5 @@
 {:source-paths ["src"]
- :dependencies []
+ :dependencies [[reagent "1.1.1"]]
  :builds {:app {:output-dir "./cljs-dist"
                 :target :npm-module
                 :entries [app.main]
