@@ -5,6 +5,7 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 window.onload = () => {
+  console.clear = () => {}
   app.render()
 }
 
