@@ -1,0 +1,19 @@
+@import 'npm:bulma/css/bulma.css';
+@import './assets/fontawesome/css/all.css';
+
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: sans-serif;
+}
+
+#root > .container {
+  height: 100%;
+}
+
+body::-webkit-scrollbar {
+  display: none;
+}
