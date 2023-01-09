@@ -103,29 +103,28 @@
     setFilterActive #(onSetFilter :active)
     setFilterCompleted #(onSetFilter :completed)
     selectedFilter #(when (= % todosFilterState) :is-info)
-    todo-status [Text
-                 [Text {:styles :has-text-weight-bold} todosCount]
-                 [Text " remaining todos"]]
-    todo-filters [(styled :div [:field :has-addons :is-align-self-center])
-                  [:p.control
-                   [Button {:styles (selectedFilter :all)
-                            :onClick setFilterAll
-                            :text "All"}]]
-                  [:p.control
-                   [Button {:styles (selectedFilter :active)
-                            :onClick setFilterActive
-                            :text "Active"}]]
-                  [:p.control
-                   [Button {:styles (selectedFilter :completed)
-                            :onClick setFilterCompleted
-                            :text "Completed"}]]]]
+    remainingTodos [Text {:styles :tag.is-medium}
+                    [Text {:styles :has-text-weight-bold} todosCount]
+                    [Text {:styles :pl-1ch} "remaining todos"]]
+    buttonFilters [(styled :div [:field :has-addons :is-align-self-center])
+                   [:p.control
+                    [Button {:styles (selectedFilter :all)
+                             :onClick setFilterAll
+                             :text "All"}]]
+                   [:p.control
+                    [Button {:styles (selectedFilter :active)
+                             :onClick setFilterActive
+                             :text "Active"}]]
+                   [:p.control
+                    [Button {:styles (selectedFilter :completed)
+                             :onClick setFilterCompleted
+                             :text "Completed"}]]]]
     [(styled :div [:mt-3
-                   :px-2
                    :is-flex
                    :is-align-items-center
                    :is-justify-content-space-between])
-     todo-status
-     todo-filters]))
+     remainingTodos
+     buttonFilters]))
 
 (defn TodoItem [{:keys [id onEditTodo onRemoveTodo onCompleteTodo]}]
   (let

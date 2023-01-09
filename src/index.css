@@ -17,3 +17,7 @@ html, body, #root {
 body::-webkit-scrollbar {
   display: none;
 }
+
+.pl-1ch {
+  padding-left: 1ch;
+}
