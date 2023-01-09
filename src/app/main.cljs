@@ -197,9 +197,10 @@
 
     (fn []
       (let
-       [filterFunc (todosFilters @todosFilterState)
+       [activeFilter (todosFilters :active)
+        filterFunc (todosFilters @todosFilterState)
         filteredTodos (filter #(->> % second filterFunc) @todos)
-        todosCount (count (filter (todosFilters :active) @todos))]
+        todosCount (count (filter #(->> % second activeFilter) @todos))]
         [:div.box
          [TopControls {:onAddTodo addTodo
                        :onDoubleCheckTodos doubleCheckTodos}]
