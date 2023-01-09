@@ -184,10 +184,10 @@
     (fn []
       (if (every? #(->> % second :completed) @todos)
         (let
-         [updatedTodos (map (fn [[id todo]] [id (markTodo todo false)]) @todos)]
+         [updatedTodos (into (sorted-map) (map (fn [[id todo]] [id (markTodo todo false)]) @todos))]
           (reset! todos updatedTodos))
         (let
-         [updatedTodos (map (fn [[id todo]] [id (markTodo todo true)]) @todos)]
+         [updatedTodos (into (sorted-map) (map (fn [[id todo]] [id (markTodo todo true)]) @todos))]
           (reset! todos updatedTodos))))
 
     setFilter
