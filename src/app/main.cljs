@@ -81,7 +81,8 @@
    [todoInput (r/atom "")
     addTodo (fn [] (onAddTodo @todoInput) (reset! todoInput ""))
     updateInput (fn [state event] (reset! state (-> event .-target .-value)))
-    editText (partial updateInput todoInput)]
+    editText (partial updateInput todoInput)
+    handleEnterKey (fn [event] (when (= "Enter" (.-key event)) (addTodo)))]
     (fn []
       [:div.field.has-addons
        [:div.control
@@ -90,7 +91,8 @@
        [:div.control.is-expanded
         [TextInput {:value @todoInput
                     :placeholder "What needs to be done?"
-                    :onChange editText}]]
+                    :onChange editText
+                    :onKeyDown handleEnterKey}]]
        [:div.control
         [Button {:onClick addTodo}
          [Icon {:icon :plus}]]]])))
