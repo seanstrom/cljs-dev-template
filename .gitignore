@@ -6,3 +6,4 @@ cljs-dist/
 .lsp/
 .parcel-cache/
 public/
+.nrepl-port
