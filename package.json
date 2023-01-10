@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "cljs-dev": "shadow-cljs watch :app",
-    "js-dev": "parcel serve -p 1255 src/index.html"
+    "js-dev": "parcel serve -p 1255 src/index.html",
+    "cljs-prod": "shadow-cljs release :app --pseudo-names",
+    "js-prod": "parcel build --dist-dir public src/index.html"
   },
   "keywords": [],
   "author": "",
