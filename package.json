@@ -2,7 +2,6 @@
   "name": "cljs-dev-template",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
   "type": "module",
   "scripts": {
     "cljs-dev": "shadow-cljs watch :app",
