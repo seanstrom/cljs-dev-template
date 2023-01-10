@@ -1,4 +1,4 @@
 (ns app.main)
 
-(defn render []
+(defn ^:export render []
   (println "[main]: render"))
