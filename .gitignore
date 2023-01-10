@@ -5,3 +5,4 @@ dist/
 cljs-dist/
 .lsp/
 .parcel-cache/
+public/
