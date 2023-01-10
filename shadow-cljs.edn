@@ -2,4 +2,5 @@
  :dependencies []
  :builds {:app {:output-dir "./cljs-dist"
                 :target :npm-module
-                :entries [app.main]}}}
+                :entries [app.main]
+                :release {:compiler-options {:optimizations :advanced}}}}}
