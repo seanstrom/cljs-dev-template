@@ -6,3 +6,11 @@ html, body, #root {
   box-sizing: border-box;
   font-family: sans-serif;
 }
+
+.edge .react-flow__edge-path {
+  stroke: blue;
+}
+
+.edge.visited .react-flow__edge-path {
+  stroke: yellow;
+}
