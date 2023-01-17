@@ -1,5 +1,7 @@
 (ns app.main
   (:require
+   [clojure.set]
+   [clojure.string]
    [goog.dom :as gdom]
    [reagent.core :as r]
    [reagent.dom :as dom]
@@ -23,11 +25,27 @@
    :e {:x 744 :y 695}
    :f {:x 629 :y 70}})
 
+(defn classes [& names]
+  clojure.string/join (map name (filter identity names)))
+
 (defn makeNodeId [node]
   (str "node-" node))
 
 (defn makeEdgeId [edge]
   (str "edge-" edge))
+
+(defn formatNode [node]
+  {:id (makeNodeId node)
+   :position (nodePositions node)
+   :data {:label (str node)}})
+
+(defn formatEdge
+  ([edge] (formatEdge edge false))
+  ([edge isVisited?]
+   {:id (makeEdgeId edge)
+    :source (makeNodeId (first edge))
+    :target (makeNodeId (second edge))
+    :className (classes :edge (when isVisited? :visited))}))
 
 (defn makeGraph [input]
   (reduce (fn [[table nodes edges] [origin destination]]
@@ -39,22 +57,6 @@
              (conj edges #{origin destination})])
           [{} #{} #{}]
           input))
-
-(defn formatNode [node]
-  {:id (makeNodeId node)
-   :position (nodePositions node)
-   :data {:label (str node)}})
-
-(defn classes [& names]
-  clojure.string/join " " (map name (filter identity names)))
-
-(defn formatEdge
-  ([edge] (formatEdge edge false))
-  ([edge isVisited?]
-   {:id (makeEdgeId edge)
-    :source (makeNodeId (first edge))
-    :target (makeNodeId (second edge))
-    :className (classes :edge (when isVisited? :visited))}))
 
 (defn makeProps [graph]
   (let [[_ nodes edges] graph
@@ -81,7 +83,8 @@
       [(conj path [node]) visited]
 
       (= 1 (count (peek path)))
-      [(conj (pop path) (conj (peek path) node)) (conj visited (set (conj (peek path) node)))]
+      [(conj (pop path) (conj (peek path) node))
+       (conj visited (set (conj (peek path) node)))]
 
       :else
       (let [prevStep (peek path)
@@ -191,7 +194,7 @@
         [:div {:style {:height "100%"}}
          [:div.search
           [:div.buttons
-           [:button.button {:onClick #(updateEdges searchState setEdges)} "increment"]]]
+           [:button.button {:onClick #(updateEdges searchState setEdges)} "Next Step"]]]
          [rf-main {:nodes nodes :edges edges :onNodesChange onNodesChange :onEdgesChange onEdgesChange}
           [rf-background]
           [rf-controls]]]))))
@@ -202,11 +205,3 @@
    [nodeId "root"
     element [strict-mode [:f> main-ui]]]
     (dom/render element (gdom/getElement nodeId))))
-
-(loop [steps 0
-       state (fillPile (initSearch graphData))]
-  (cond
-    (= 0 steps)
-    state
-    :else
-    (recur (inc steps) (updateSearch state))))
