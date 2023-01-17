@@ -9,8 +9,9 @@ html, body, #root {
 
 .edge .react-flow__edge-path {
   stroke: blue;
+  stroke-width: 0.2rem;
 }
 
 .edge.visited .react-flow__edge-path {
-  stroke: yellow;
+  stroke: orange;
 }
