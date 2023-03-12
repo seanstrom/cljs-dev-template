@@ -1,3 +1,4 @@
+.cpcache/
 node_modules/
 .clj-kondo/
 .shadow-cljs/
