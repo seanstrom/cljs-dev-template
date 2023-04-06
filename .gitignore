@@ -8,3 +8,4 @@ cljs-dist/
 .parcel-cache/
 public/
 .nrepl-port
+.cpcache/
