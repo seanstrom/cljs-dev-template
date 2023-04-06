@@ -6,6 +6,7 @@ if (process.env.NODE_ENV !== "production") {
 
 window.onload = () => {
   app.render()
+  console.clear = () => {}
 }
 
 if (module.hot) {
