@@ -9,7 +9,7 @@
     "cljs-prod": "shadow-cljs release :app --pseudo-names",
     "js-prod": "parcel build --dist-dir public src/index.html",
     "clean": "rm -r cljs-dist/* dist/* public/*",
-    "clear-cache": "rm -r ./.parcel-cache/* ./.shadow-cljs/*"
+    "clear-cache": "rm -r ./.parcel-cache/ ./.shadow-cljs"
   },
   "keywords": [],
   "author": "",
