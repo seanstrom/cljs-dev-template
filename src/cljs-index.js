@@ -1,7 +1,7 @@
 import * as app from '../cljs-dist/app.main.js'
 
 if (process.env.NODE_ENV !== "production") {
-  require("../cljs-dist/shadow.cljs.devtools.client.browser.js")
+  require("../cljs-dist/cljs-runtime/shadow.cljs.devtools.client.browser.js")
 }
 
 window.onload = () => {
