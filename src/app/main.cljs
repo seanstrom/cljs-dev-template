@@ -8,3 +8,6 @@
     (.appendChild node text-node))
 
   (println "[main]: render"))
+
+(defn ^:dev/after-load start []
+  (render))

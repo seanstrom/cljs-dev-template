@@ -1,9 +1,7 @@
 {:source-paths ["src"]
  :dependencies []
  :builds {:app {:output-dir "./cljs-dist"
-                ;; :target :npm-module
-                ;; :entries [app.main]
                 :target :esm
-                :modules {:app.main {:exports {render app.main/render}}}
                 :runtime :browser
+                :modules {:app.main {:exports {render app.main/render}}}
                 :release {:compiler-options {:optimizations :advanced}}}}}
