@@ -1,7 +1,14 @@
 {:source-paths ["src"]
  :dependencies []
- :builds {:app {:output-dir "./cljs-dist"
+ :builds {:app {:output-dir "./cljs-dist/app"
                 :target :esm
                 :runtime :browser
-                :modules {:app.main {:exports {render app.main/render}}}
-                :release {:compiler-options {:optimizations :advanced}}}}}
+                :js-options {:js-provider :import}
+                :modules {:app.main {:exports {render app.app/render}}}
+                :release {:compiler-options {:optimizations :advanced}}}
+          :server {:output-dir "./cljs-dist/server"
+                   :target :esm
+                   :js-options {:js-provider :import}
+                   :runtime :custom :devtools {:client-ns server.devtools}
+                   :modules {:server.main {:exports {main server.server/main}}}
+                   :release {:compiler-options {:optimizations :advanced}}}}}

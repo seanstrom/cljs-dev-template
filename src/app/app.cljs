@@ -1,4 +1,4 @@
-(ns app.main)
+(ns app.app)
 
 (defn ^:export render []
   (let [change-me "Hello"
