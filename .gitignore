@@ -13,5 +13,5 @@ node_modules/
 # Dist Stuff
 cljs-dist/**/*
 !cljs-dist/.gitkeep
-public/**/*
-!public/.gitkeep
+dist/**/*
+!dist/.gitkeep
