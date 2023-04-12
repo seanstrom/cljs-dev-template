@@ -1,11 +1,17 @@
+ # Random Stuff
+.lsp/
 .cpcache/
+
+# JS Stuff
 node_modules/
+
+# Clojure Stuff
+.nrepl-port
 .clj-kondo/
 .shadow-cljs/
-dist/
-cljs-dist/
-.lsp/
-.parcel-cache/
-public/
-.nrepl-port
-.cpcache/
+
+# Dist Stuff
+cljs-dist/**/*
+!cljs-dist/.gitkeep
+public/**/*
+!public/.gitkeep
