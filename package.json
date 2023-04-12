@@ -17,6 +17,7 @@
   "devDependencies": {
     "shadow-cljs": "^2.22.10",
     "vite": "^4.2.1",
-    "vite-node": "^0.29.8"
+    "vite-node": "^0.29.8",
+    "ws": "^8.13.0"
   }
 }
