@@ -1,14 +1,19 @@
 {:source-paths ["src"]
- :dependencies []
+ :dependencies [[metosin/malli "0.11.0"]]
  :builds {:app {:output-dir "./cljs-dist/app"
                 :target :esm
                 :runtime :browser
                 :js-options {:js-provider :import}
+                :devtools {:preloads [dev.preload
+                                      malli.dev.cljs-kondo-preload]}
                 :modules {:app.main {:exports {render app.app/render}}}
                 :release {:compiler-options {:optimizations :advanced}}}
           :server {:output-dir "./cljs-dist/server"
                    :target :esm
                    :js-options {:js-provider :import}
-                   :runtime :custom :devtools {:client-ns server.devtools}
+                   :runtime :custom
+                   :devtools {:client-ns server.devtools
+                              :preloads [dev.preload
+                                         malli.dev.cljs-kondo-preload]}
                    :modules {:server.main {:exports {main server.server/main}}}
                    :release {:compiler-options {:optimizations :advanced}}}}}
