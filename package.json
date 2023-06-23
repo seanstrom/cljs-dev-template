@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "",
   "type": "module",
+  "imports": {
+    "#cljs/*": "./cljs-dist/*"
+  },
   "scripts": {
     "app-cljs-dev": "shadow-cljs watch :app",
     "app-cljs-prod": "shadow-cljs release :app --pseudo-names",
