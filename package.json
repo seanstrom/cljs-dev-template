@@ -7,7 +7,7 @@
     "#cljs/*": "./cljs-dist/*"
   },
   "scripts": {
-    "app-dev": "npm-run-all -p app-cljs-dev app-js-dev-wait ",
+    "app-dev": "npm-run-all -p app-cljs-dev app-js-dev-wait",
     "app-cljs-dev": "shadow-cljs watch :app",
     "app-cljs-prod": "shadow-cljs release :app --pseudo-names",
     "app-js-dev-wait": "wait-on ./cljs-dist/app/app.main.js && npm run app-js-dev",
