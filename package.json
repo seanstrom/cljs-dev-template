@@ -55,6 +55,8 @@
   },
   "dependencies": {
     "@andrewmacmurray/elm-concurrent-task": "^1.1.0",
-    "atomico": "^1.75.2"
+    "atomico": "^1.75.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   }
 }
