@@ -52,11 +52,18 @@
 (defn clock-dispatch [message clock-state]
   (let [[message-id] message]
     (case message-id
-      :start-clock (swap! clock-state merge
-                          {:status :running
-                           :timer (js/setInterval
-                                   #(swap! (ra/cursor clock-state [:counted-seconds]) inc)
-                                   1000)})
+      :start-clock (swap! clock-state
+                          (fn update [state]
+                            (merge state
+                                   {:status :running
+                                    :timer (js/setInterval
+                                            (fn []
+                                              (let [counted-seconds (ra/cursor clock-state [:counted-seconds])]
+                                                (set! (.. js/document -title)
+                                                      (str (format-money (* (:wages-per-second state) @counted-seconds))
+                                                           " raised so far"))
+                                                (swap! counted-seconds inc)))
+                                            1000)})))
       :stop-clock (swap! clock-state merge
                          {:timer (js/clearInterval (:timer @clock-state))
                           :status :idle})
