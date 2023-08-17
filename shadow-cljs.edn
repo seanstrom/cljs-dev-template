@@ -1,6 +1,7 @@
 {:source-paths ["src"]
  :dependencies [[metosin/malli "0.11.0"]
-                [reagent/reagent "1.2.0"]]
+                [reagent/reagent "1.2.0"]
+                [macchiato/hiccups "0.4.1"]]
  :nrepl {:port 8420}
  :builds {:app {:output-dir "./cljs-dist/app"
                 :target :esm
