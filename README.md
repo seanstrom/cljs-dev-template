@@ -1,4 +1,4 @@
-## Setup Instructions
+## Minimal Sourcemap Issue Reproduction
 
 ### Dependencies
 * Clojure
@@ -10,32 +10,27 @@
 npm install
 ```
 
-### Build App CLJS
+### Build CLJS with Source Maps
 ```
-npm run app-cljs-dev
-```
-
-### Build Server CLJS
-```
-npm run server-cljs-dev
+npm run app-cljs-prod
 ```
 
-### Build App JS
+### Run Vite Dev Server
 ```
 npm run app-js-dev
 ```
 
-### Build Server JS
+### Visit localhost:4000/
+
+### Look at Vite console output
+
+You should see an error message like:
 ```
-npm run server-js-dev
+[vite] Internal server error: Cannot read properties of undefined (reading 'length')
+      at loadAndTransform (file:///Users/seanstrom/Code/org-seanstrom/cljs-dev-template/node_modules/vite/dist/node/chunks/dep-79892de8.js:41126:63)
 ```
 
-### Clean Build
-```
-npm run clean
-```
+### Reasons for error?
 
-### Clear Build Cache
-```
-npm run clear-cache
-```
+* This could be caused by Vite's lack of support for "indexed" source maps (or source maps with "sections").
+* It's possible to potentially flatten an indexed source map inside of Vite, maybe it's possible inside of Shadow-CLJS?
