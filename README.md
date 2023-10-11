@@ -1,7 +1,6 @@
 ## Setup Instructions
 
 ### Dependencies
-* Shadow-CLJS
 * Clojure
 * Java
 * NPM
