@@ -15,22 +15,25 @@ npm install
 npm run app-cljs-prod
 ```
 
-### Run Vite Dev Server
+### Run ESbuild
 ```
-npm run app-js-dev
-```
-
-### Visit localhost:4000/
-
-### Look at Vite console output
-
-You should see an error message like:
-```
-[vite] Internal server error: Cannot read properties of undefined (reading 'length')
-      at loadAndTransform (file:///Users/seanstrom/Code/org-seanstrom/cljs-dev-template/node_modules/vite/dist/node/chunks/dep-79892de8.js:41126:63)
+npm run app-js-esbuild
 ```
 
-### Reasons for error?
+### Look at ESbuild console output
 
-* This could be caused by Vite's lack of support for "indexed" source maps (or source maps with "sections").
-* It's possible to potentially flatten an indexed source map inside of Vite, maybe it's possible inside of Shadow-CLJS?
+You should see an warning message like:
+```
+▲ [WARNING] Source maps with "sections" are not supported [sections-in-source-map]
+
+    cljs-dist/app/app.main.js.map:1:34:
+      1 │ {"version":3,"file":"app.main.js","sections":[{"offset":{"line":3,"column":0},"map":{"version":3,"file":"app.main.js","li...
+        ╵                                   ~~~~~~~~~~
+
+  The source map "cljs-dist/app/app.main.js.map" was referenced by the file
+  "cljs-dist/app/app.main.js" here:
+
+    cljs-dist/app/app.main.js:5763:21:
+      5763 │ //# sourceMappingURL=app.main.js.map
+           ╵                      ~~~~~~~~~~~~~~~
+```
