@@ -13,6 +13,7 @@
     "app-js-dev-wait": "wait-on ./cljs-dist/app/app.main.js && npm run app-js-dev",
     "app-js-dev": "vite --config vite.config.js --port 4000 src/app/",
     "app-js-prod": "vite build --emptyOutDir --outDir ../dist/app src/app/",
+    "app-js-esbuild": "esbuild ./cljs-dist/app/app.main.js --platform=browser --sourcemap --outfile=./dist/main.js",
     "clean": "rm -r cljs-dist/* dist/*",
     "clear-cache": "rm -r .shadow-cljs/"
   },
@@ -21,6 +22,7 @@
   "license": "ISC",
   "devDependencies": {
     "clj-kondo": "^2023.5.26",
+    "esbuild": "^0.19.4",
     "npm-run-all": "^4.1.5",
     "shadow-cljs": "^2.25.3",
     "typescript": "^5.3.3",
