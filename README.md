@@ -6,6 +6,11 @@
 * Java
 * NPM
 
+### Install JS Dependencies
+```
+npm install
+```
+
 ### Build App CLJS
 ```
 npm run app-cljs-dev
