@@ -9,6 +9,8 @@ if (import.meta.hot) {
   import.meta.hot.accept()
 }
 
+app.init()
+
 window.onload = () => {
   console.log('test', add_one)
   const app = Elm.Main.init({ node: document.getElementById("root") })

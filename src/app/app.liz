@@ -1,0 +1,25 @@
+(const std (@import "std"))
+(const Allocator std.mem.Allocator)
+
+(defn ^"[]u8" concat [^Allocator allocator ^"[]const u8" a ^"[]const u8" b]
+  (catch (const result (allocator.alloc u8, (+ a.len b.len)))
+    (@panic "failed alloc"))
+  (std.mem.copy u8 result a)
+  (std.mem.copy u8 (slice result a.len) b)
+  (return result))
+
+(defn ^{:extern "env"} ^:pub ^void consoleLog [^"[*]const u8" message ^u32 length])
+
+(defn ^:export ^usize memLen [^"[*:0]u8" pointer]
+  (return (std.mem.len pointer)))
+
+(defn ^:export ^"[*]const u8" pullString [^"[*:0]u8" pointer]
+  (const ^"[]const u8" message (std.mem.span pointer))
+  (consoleLog message.ptr message.len)
+  (const ^"[]const u8" other (concat std.heap.page_allocator message " world!"))
+  (return other.ptr))
+
+(defn ^:export ^"[*]const u8" allocUint8 [^u32 length]
+  (catch (const slice (std.heap.page_allocator.alloc u8 length))
+    (@panic "failed memory"))
+  (return slice.ptr))
