@@ -8,6 +8,10 @@
   },
   "scripts": {
     "app-dev": "npm-run-all -p app-cljs-dev app-js-dev-wait",
+    "app-liz-dev": "pushd src/app; java -jar ../../vendor/liz.jar app.liz; popd",
+    "app-zig-dev-wait": "wait-on ./src/app/app.zig && npm run app-zig-dev",
+    "app-zig-dev": "pushd src/app; zig build-lib app.zig -target wasm32-freestanding -dynamic -rdynamic; popd",
+    "app-wasm-dev": "npm-run-all -p app-liz-dev app-zig-dev-wait",
     "app-cljs-dev": "shadow-cljs watch :app",
     "app-cljs-prod": "shadow-cljs release :app --pseudo-names",
     "app-js-dev-wait": "wait-on ./cljs-dist/app/app.main.js && npm run app-js-dev",
@@ -27,7 +31,7 @@
     "all-cljs-prod": "shadow-cljs release :app :server --pseudo-names",
     "all-dev": "npm-run-all -p all-cljs-dev app-js-dev-wait server-js-dev-wait",
     "all-prod": "npm-run-all -p all-cljs-prod app-js-prod server-js-prod",
-    "clean": "rm -r cljs-dist/* dist/*",
+    "clean": "rm -r cljs-dist/* dist/* src/app/app.wasm* src/app/app.zig",
     "clear-cache": "rm -r .shadow-cljs/"
   },
   "keywords": [],
