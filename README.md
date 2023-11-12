@@ -4,6 +4,7 @@
 * Clojure
 * Java
 * NPM
+* Zig
 
 ### Install JS Dependencies
 ```
@@ -28,6 +29,11 @@ npm run app-js-dev
 ### Build Server JS
 ```
 npm run server-js-dev
+```
+
+### Building WASM module from Zig and Liz
+```
+npm run app-wasm-dev
 ```
 
 ### Clean Build
