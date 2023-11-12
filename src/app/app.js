@@ -5,6 +5,8 @@ if (import.meta.hot) {
   import.meta.hot.accept()
 }
 
+app.init()
+
 window.onload = () => {
   app.render()
 }
