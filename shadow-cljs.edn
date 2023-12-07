@@ -1,5 +1,6 @@
 {:source-paths ["src"]
- :dependencies [[metosin/malli "0.11.0"]]
+ :dependencies [[org.clojure/core.match "1.0.1"]
+                [metosin/malli "0.11.0"]]
  :nrepl {:port 8420}
  :builds {:app {:output-dir "./cljs-dist/app"
                 :target :esm
