@@ -6,14 +6,24 @@
 * Java
 * NPM
 
-### Build CLJS
+### Build App CLJS
 ```
-npm run cljs:dev
+npm run app-cljs-dev
 ```
 
-### Build JS
+### Build Server CLJS
 ```
-npm run js:dev
+npm run server-cljs-dev
+```
+
+### Build App JS
+```
+npm run app-js-dev
+```
+
+### Build Server JS
+```
+npm run server-js-dev
 ```
 
 ### Clean Build
