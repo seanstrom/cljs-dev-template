@@ -11,6 +11,7 @@ node_modules/
 .shadow-cljs/
 
 # Dist Stuff
+build/
 cljs-dist/**/*
 !cljs-dist/.gitkeep
 dist/**/*
