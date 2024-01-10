@@ -1,7 +1,5 @@
 import path from 'path'
 import { defineConfig } from "vite"
-import { fileURLToPath, URL } from 'url'
-
 
 export default defineConfig({
   server: {
