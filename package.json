@@ -47,6 +47,7 @@
     "vite": "^4.2.1",
     "vite-gleam": "^0.4.0",
     "vite-node": "^0.29.8",
+    "vite-plugin-elm": "^2.9.0",
     "wait-on": "^7.0.1",
     "ws": "^8.13.0"
   }
