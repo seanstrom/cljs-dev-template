@@ -5,6 +5,9 @@
 # JS Stuff
 node_modules/
 
+# Elm Stuff
+elm-stuff/
+
 # Clojure Stuff
 .nrepl-port
 .clj-kondo/
