@@ -1,5 +1,5 @@
 import * as app from '#cljs/app/app.main.js'
-import { Elm } from "./App.elm"
+import { Elm } from "./Main.elm"
 import './app.css'
 
 if (import.meta.hot) {
@@ -7,6 +7,6 @@ if (import.meta.hot) {
 }
 
 window.onload = () => {
-  Elm.App.init({ node: document.getElementById("root") })
+  Elm.Main.init({ node: document.getElementById("root") })
   // app.render()
 }
