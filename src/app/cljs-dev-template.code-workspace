@@ -1,0 +1,19 @@
+{
+	"folders": [
+		{
+			"path": "../.."
+		},
+		{
+			"path": ".."
+		},
+		{
+			"path": "../../tests"
+		}
+	],
+	"settings": {
+		"elmLand.entrypointFilepaths": [
+			"src/Main.elm",
+			".elm-land/src/Main.elm"
+		]
+	}
+}
