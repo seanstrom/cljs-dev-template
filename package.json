@@ -54,6 +54,7 @@
   },
   "dependencies": {
     "@andrewmacmurray/elm-concurrent-task": "^1.1.0",
+    "@spotify/web-api-ts-sdk": "^1.2.0",
     "atomico": "^1.75.2"
   }
 }
