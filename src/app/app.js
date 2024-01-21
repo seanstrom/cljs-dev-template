@@ -2,6 +2,7 @@ import * as ConcurrentTask from "@andrewmacmurray/elm-concurrent-task";
 import * as app from '#cljs/app/app.main.js'
 import { Elm } from "./Main.elm"
 import './app.css'
+import { boot } from './spotify.js'
 
 if (import.meta.hot) {
   import.meta.hot.accept()
@@ -9,18 +10,22 @@ if (import.meta.hot) {
 
 window.onload = () => {
   console.log('test')
-  const app = Elm.Main.init({ node: document.getElementById("root") })
-  app.ports.outbox?.subscribe((msg) => {
+  const elm = Elm.Main.init({ node: document.getElementById("root") })
+  elm.ports.outbox?.subscribe((msg) => {
     console.log("msg", msg)
   })
 
-  app.ports.inbox.send("Hello!")
+  elm.ports.inbox.send("Hello!")
 
   ConcurrentTask.register({
     tasks: {},
     ports: {
-      send: app.ports.run,
-      receive: app.ports.track,
+      send: elm.ports.run,
+      receive: elm.ports.track,
     },
   });
+
+  app.render()
+  // app.boot(import.meta.env)
+  boot(import.meta.env)
 }
