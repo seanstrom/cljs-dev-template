@@ -48,5 +48,8 @@
     "vite-node": "^0.29.8",
     "wait-on": "^7.0.1",
     "ws": "^8.13.0"
+  },
+  "dependencies": {
+    "@spotify/web-api-ts-sdk": "^1.2.0"
   }
 }
