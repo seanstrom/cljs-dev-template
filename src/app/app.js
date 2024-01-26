@@ -8,6 +8,6 @@ if (import.meta.hot) {
 
 window.onload = () => {
   app.render()
-  // app.boot(import.meta.env)
-  boot(import.meta.env)
+  app.boot(import.meta.env)
+  // boot(import.meta.env)
 }
