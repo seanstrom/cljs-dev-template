@@ -3,9 +3,15 @@
    [cljs.core.async :refer [go]]
    [cljs.core.async.interop :refer [<p!] :rename {<p! await}]
    [malli.core :as m :refer [=>] :rename {=> sigf}]
+   [reagent.core :as r]
+   [reagent.ratom :as ra]
+   [reagent.dom.client :as rdom-client]
+   [goog.dom :as gdom]
    ["atomico" :as atomico :refer [c html css useProp]]
-   ["lodash.shuffle" :as shuffle]
-   ["@spotify/web-api-ts-sdk" :refer [SpotifyApi, AuthorizationCodeWithPKCEStrategy]]))
+   ["@spotify/web-api-ts-sdk" :refer [SpotifyApi, AuthorizationCodeWithPKCEStrategy]]
+   ["~src/app/icons.js" :as icons]))
+
+(defonce app-state (ra/atom {:paused true}))
 
 (defn load-spotify-playback-sdk []
   (let [script-element (js/document.createElement "script")]
@@ -13,33 +19,30 @@
     (set! (.-async script-element) true)
     (.append js/window.document.body script-element)))
 
+(defn connect-spotify-player [access-token]
+  (js/Promise.
+   (fn [resolve _reject]
+     (let [player (js/window.Spotify.Player.
+                   #js {:name "Web Playback SDK"
+                        :getOAuthToken (fn [cb] (cb access-token))
+                        :volume 0.5})]
+       (set! (.-player js/window) player)
+       (.addListener player "ready"
+                     (fn [^js event]
+                       (resolve (.-device_id event))))
+       (.addListener player "not_ready"
+                     (fn [^js _event]))
+       (.addListener player "player_state_changed"
+                     (fn [^js _state]))
+       (.connect player)))))
+
 (defn load-spotify-device-api [{:keys [access-token]}]
-  (load-spotify-playback-sdk)
-  (js/Promise. (fn [resolve _reject]
-                 (set! (.-onSpotifyWebPlaybackSDKReady js/window)
-                       (fn []
-                         (let [player (js/window.Spotify.Player.
-                                       #js {:name "Web Playback SDK"
-                                            :getOAuthToken (fn [cb] (cb access-token))
-                                            :volume 0.5})]
-                           (set! (.-player js/window) player)
-                           (.addListener player "ready" (fn [^js event]
-                                                          (let [device-id (.-device_id event)
-                                                                event #js {:detail #js {:deviceId device-id}}]
-                                                            (js/dispatchEvent
-                                                             (js/CustomEvent. "device-ready" event))
-                                                            (resolve device-id))))
-                           (.addListener player "not_ready" (fn [^js event]
-                                                              (let [event #js {:detail #js {:deviceId (.-device_id event)}}]
-                                                                (js/dispatchEvent
-                                                                 (js/CustomEvent. "device-not-ready" event)))))
-                           (.addListener player "player_state_changed" (fn [^js state]
-                                                                         (let [event #js{:detail #js{:state state}}]
-                                                                           (js/dispatchEvent
-                                                                            (js/CustomEvent. "device-player-state" event)))))
-                           (.addEventListener js/window "device-ready" (fn [event]
-                                                                         (.. event -detail -deviceId)))
-                           (.connect player)))))))
+  (js/Promise.
+   (fn [resolve _reject]
+     (set! (.-onSpotifyWebPlaybackSDKReady js/window)
+           #(go (->> (await (connect-spotify-player access-token))
+                     resolve)))
+     (load-spotify-playback-sdk))))
 
 (defn get-playlist [^js spotify playlist-id]
   (.. spotify -playlists
@@ -47,12 +50,13 @@
 
 (defn play-device-tracks [^js spotify device-id tracks]
   (.. spotify -player
-      (startResumePlayback device-id nil tracks)))
+      (startResumePlayback device-id nil (clj->js tracks))))
 
 (defn get-playlist-tracks [^js playlist]
-  (.map (.. playlist -tracks -items)
-        (fn [^js item]
-          (.. item -track -uri))))
+  (js->clj
+   (.map (.. playlist -tracks -items)
+         (fn [^js item]
+           (.. item -track -uri)))))
 
 (defn play-songs [^js spotify device-id playlist-id]
   (go
@@ -97,16 +101,47 @@
             device-id (await (load-spotify-device-api {:access-token access-token}))
             playlist (await (find-discover-weekly spotify))]
         (when (and playlist device-id)
-          (play-songs spotify device-id (.-id playlist)))))))
+          (await (play-songs spotify device-id (.-id playlist))))))))
+
+
+(defn set-paused [^js state]
+  (swap! app-state assoc :paused (.-paused state)))
+
+(defn toggle-play []
+  (go (->> (await (js/window.player.togglePlay))
+           set-paused)))
+
+(defn pause-player []
+  (go (await (js/window.player.pause))
+      (swap! app-state assoc :paused true)))
+
+(defn resume-player []
+  (go (await (js/window.player.resume))
+      (swap! app-state assoc :paused false)))
+
+(defn app [state]
+  [:div {:class "flex gap-2 justify-center items-center flex-1"}
+   [:button {:class "btn"
+             :on-click #(js/window.player.previousTrack)}
+    [:> icons/SkipBackwardIcon]]
+   (if @(ra/cursor state [:paused])
+     [:button {:class "btn"
+               :on-click #(resume-player)}
+      [:> icons/PlayIcon]]
+     [:button {:class "btn"
+               :on-click #(pause-player)}
+      [:> icons/PauseIcon]])
+
+   [:button {:class "btn"
+             :on-click #(js/window.player.nextTrack)}
+    [:> icons/SkipForwardIcon]]])
+
+(defonce app-root (rdom-client/create-root
+                   (gdom/getElement "root")))
 
 (defn ^:export render []
-  (let [change-me "Hello"
+  (rdom-client/render app-root [app app-state]))
 
-        node (js/document.getElementById "root")
-        text-node (js/document.createTextNode change-me)]
-    (.appendChild node text-node))
-
-  (println "[main]: render"))
 
 (defn component []
   (let [icon (useProp "icon")]
