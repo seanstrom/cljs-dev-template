@@ -51,5 +51,8 @@
     "vite-plugin-elm": "^2.9.0",
     "wait-on": "^7.0.1",
     "ws": "^8.13.0"
+  },
+  "dependencies": {
+    "atomico": "^1.75.2"
   }
 }
