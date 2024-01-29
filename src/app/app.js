@@ -7,6 +7,11 @@ if (import.meta.hot) {
 }
 
 window.onload = () => {
-  Elm.Main.init({ node: document.getElementById("root") })
+  console.log('test')
+  const app = Elm.Main.init({ node: document.getElementById("root") })
+  app.ports.outbox?.subscribe((msg) => {
+    console.log("msg", msg)
+  })
+  app.ports.inbox.send("Hello!")
   // app.render()
 }

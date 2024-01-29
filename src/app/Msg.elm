@@ -2,5 +2,6 @@ module Msg exposing (..)
 
 
 type Msg
-    = Increment
+    = IncomingMessage
+    | Increment
     | Decrement
