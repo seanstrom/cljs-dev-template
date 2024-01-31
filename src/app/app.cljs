@@ -1,6 +1,7 @@
 (ns app.app
   (:require
    [cljs.core.async :refer [go]]
+   [clojure.core.async]
    [cljs.core.async.interop :refer [<p!] :rename {<p! await}]
    [malli.core :as m :refer [=>] :rename {=> sigf}]
    [reagent.core :as r]
@@ -11,7 +12,15 @@
    ["@spotify/web-api-ts-sdk" :refer [SpotifyApi, AuthorizationCodeWithPKCEStrategy]]
    ["~src/app/icons.js" :as icons]))
 
-(defonce app-state (ra/atom {:paused true}))
+(defonce app-state (r/atom {:paused true}))
+
+(defn pause-player []
+  (-> (js/window.player.pause)
+      (.then #(swap! app-state assoc :paused true))))
+
+(defn resume-player []
+  (-> (js/window.player.resume)
+      (.then #(swap! app-state assoc :paused false))))
 
 (defn load-spotify-playback-sdk []
   (let [script-element (js/document.createElement "script")]
@@ -40,8 +49,8 @@
   (js/Promise.
    (fn [resolve _reject]
      (set! (.-onSpotifyWebPlaybackSDKReady js/window)
-           #(go (->> (await (connect-spotify-player access-token))
-                     resolve)))
+           #(-> (connect-spotify-player access-token)
+                (.then resolve)))
      (load-spotify-playback-sdk))))
 
 (defn get-playlist [^js spotify playlist-id]
@@ -59,11 +68,10 @@
            (.. item -track -uri)))))
 
 (defn play-songs [^js spotify device-id playlist-id]
-  (go
-    (->> (await (get-playlist spotify playlist-id))
-         get-playlist-tracks
-         shuffle
-         (play-device-tracks spotify device-id))))
+  (-> (get-playlist spotify playlist-id)
+      (.then (comp (partial play-device-tracks spotify device-id)
+                   shuffle
+                   get-playlist-tracks))))
 
 (defn get-access-token [^js spotify]
   (-> (.getAccessToken spotify)
@@ -78,46 +86,32 @@
                   (and (= (.-name item) "Discover Weekly")
                        (= (.-display_name (.-owner item)) "Spotify"))))))))
 
+(defn env->auth-strategy [^js env]
+  (AuthorizationCodeWithPKCEStrategy.
+   (.. env -VITE_SPOTIFY_CLIENT_ID)
+   (.. env -VITE_REDIRECT_TARGET)
+   #js[;; NOTE: Needed for both Search API and Web Playback SDK
+       "user-read-email"
+       "user-read-private"
+
+       ;; NOTE: Needed for Search API
+       "user-library-read"
+       "playlist-read-private"
+
+       ;; NOTE: Needed for the Web Playback SDK to work.
+       "streaming"
+       "user-read-playback-state"
+       "user-modify-playback-state"]))
+
 (defn ^:export boot [^js env]
-  (let [implicitGrantStrategy (AuthorizationCodeWithPKCEStrategy.
-                               (.. env -VITE_SPOTIFY_CLIENT_ID)
-                               (.. env -VITE_REDIRECT_TARGET)
-                               #js[; NOTE: Needed for both Search API and Web Playback SDK
-                                   "user-read-email"
-                                   "user-read-private"
-
-                                   ; NOTE: Needed for Search API
-                                   "user-library-read"
-                                   "playlist-read-private"
-
-                                   ; NOTE: Needed for the Web Playback SDK to work.
-                                   "streaming"
-                                   "user-read-playback-state"
-                                   "user-modify-playback-state"])
+  (let [implicitGrantStrategy (env->auth-strategy env)
         spotify (SpotifyApi. implicitGrantStrategy)]
-    (go
-      (await (.authenticate spotify))
-      (let [access-token (await (get-access-token spotify))
-            device-id (await (load-spotify-device-api {:access-token access-token}))
-            playlist (await (find-discover-weekly spotify))]
-        (when (and playlist device-id)
-          (await (play-songs spotify device-id (.-id playlist))))))))
-
-
-(defn set-paused [^js state]
-  (swap! app-state assoc :paused (.-paused state)))
-
-(defn toggle-play []
-  (go (->> (await (js/window.player.togglePlay))
-           set-paused)))
-
-(defn pause-player []
-  (go (await (js/window.player.pause))
-      (swap! app-state assoc :paused true)))
-
-(defn resume-player []
-  (go (await (js/window.player.resume))
-      (swap! app-state assoc :paused false)))
+    (go (await (.authenticate spotify))
+        (let [access-token (await (get-access-token spotify))
+              device-id (await (load-spotify-device-api {:access-token access-token}))
+              playlist (await (find-discover-weekly spotify))]
+          (when (and playlist device-id)
+            (await (play-songs spotify device-id (.-id playlist))))))))
 
 (defn app [state]
   [:div {:class "flex gap-2 justify-center items-center flex-1"}
