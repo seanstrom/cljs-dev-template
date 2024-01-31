@@ -110,7 +110,8 @@
               device-id (await (load-spotify-device-api {:access-token access-token}))
               playlist (await (find-discover-weekly spotify))]
           (when (and playlist device-id)
-            (await (play-songs spotify device-id (.-id playlist))))))))
+            (await (play-songs spotify device-id (.-id playlist)))
+            (swap! app-state assoc :paused false))))))
 
 (defn app [state]
   [:div {:class "flex gap-2 justify-center items-center flex-1"}
