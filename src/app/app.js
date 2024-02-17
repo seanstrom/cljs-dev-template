@@ -1,3 +1,4 @@
+import * as ConcurrentTask from "@andrewmacmurray/elm-concurrent-task";
 import * as app from '#cljs/app/app.main.js'
 import { Elm } from "./Main.elm"
 import './app.css'
@@ -12,6 +13,14 @@ window.onload = () => {
   app.ports.outbox?.subscribe((msg) => {
     console.log("msg", msg)
   })
+
   app.ports.inbox.send("Hello!")
-  // app.render()
+
+  ConcurrentTask.register({
+    tasks: {},
+    ports: {
+      send: app.ports.sendPortTask,
+      receive: app.ports.receivePortTask,
+    },
+  });
 }
