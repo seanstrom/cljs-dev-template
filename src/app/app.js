@@ -19,8 +19,8 @@ window.onload = () => {
   ConcurrentTask.register({
     tasks: {},
     ports: {
-      send: app.ports.sendPortTask,
-      receive: app.ports.receivePortTask,
+      send: app.ports.run,
+      receive: app.ports.track,
     },
   });
 }

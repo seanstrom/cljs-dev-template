@@ -1,15 +1,15 @@
-port module Port exposing (receive, sendMessage)
+module Port exposing (..)
 
-import Json.Encode as JE
-import Message exposing (Message)
-
-
-sendMessage : Message -> Cmd msg
-sendMessage =
-    Message.encode >> send
+import Port.Message
 
 
-port send : JE.Value -> Cmd msg
+receive : (Port.Message.Msg -> msg) -> Port.Message.Msg -> msg
+receive toMsg message =
+    case message of
+        _ ->
+            toMsg message
 
 
-port receive : (JE.Value -> msg) -> Sub msg
+send : Port.Message.Payload -> Cmd msg
+send payload =
+    Port.Message.outbox <| Port.Message.encode payload
