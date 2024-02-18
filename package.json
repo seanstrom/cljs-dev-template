@@ -11,7 +11,7 @@
     "app-cljs-dev": "shadow-cljs watch :app",
     "app-cljs-prod": "shadow-cljs release :app --pseudo-names",
     "app-js-dev-wait": "wait-on ./cljs-dist/app/app.main.js && npm run app-js-dev",
-    "app-js-dev": "vite --config vite.config.js --port 4000 src/app/",
+    "app-js-dev": "vite --config vite.config.js --port 4000 src/app/ --host 0.0.0.0",
     "app-js-prod": "vite build --emptyOutDir --outDir ../dist/app src/app/",
     "server-dev": "npm-run-all -p server-cljs-dev server-js-dev-wait",
     "server-cljs-dev": "shadow-cljs watch :server",
