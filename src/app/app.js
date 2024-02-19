@@ -18,14 +18,16 @@ window.onload = () => {
   elm.ports.inbox.send("Hello!")
 
   ConcurrentTask.register({
-    tasks: {},
+    tasks: {
+      "boot": (args) => app.boot(import.meta.env)
+    },
     ports: {
       send: elm.ports.run,
       receive: elm.ports.track,
     },
   });
 
-  app.render()
-  app.boot(import.meta.env)
+  // app.render()
+  // app.boot(import.meta.env)
   // boot(import.meta.env)
 }

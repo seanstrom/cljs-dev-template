@@ -30,6 +30,16 @@ type alias Model =
     }
 
 
+bootSpotify =
+    ConcurrentTask.define
+        { function = "boot"
+        , expect = ConcurrentTask.expectWhatever
+        , errors = ConcurrentTask.expectNoErrors
+        , args = Encode.null
+        }
+        |> ConcurrentTask.map Port.Task.Whatever
+
+
 init : () -> ( Model, Cmd Msg )
 init flags =
     let
@@ -39,7 +49,7 @@ init flags =
                 , pool = ConcurrentTask.pool
                 , onComplete = Port.Task.OnComplete
                 }
-                Port.Item.getAllTitles
+                bootSpotify
     in
     ( { tasks = tasks
       , count = 0
