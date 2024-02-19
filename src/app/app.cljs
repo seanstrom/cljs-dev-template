@@ -157,7 +157,7 @@
 #_(set! (.-styles component)
         (css #js[":host" "{" "font-size: 30px;" "}"]))
 
-(.define js/customElements "my-component" (c component))
+;; (.define js/customElements "my-component" (c component))
 
 (defn ^:dev/after-load start []
   (render))
