@@ -28,6 +28,7 @@ type alias Error =
 
 type Success
     = Dashboard DashboardPayload
+    | Whatever ()
 
 
 type alias DashboardPayload =
