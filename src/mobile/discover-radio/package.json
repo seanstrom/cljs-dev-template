@@ -1,0 +1,19 @@
+{
+  "name": "discover-radio",
+  "main": "app/app.ts",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "@nativescript/core": "~8.6.0",
+    "@nativescript/theme": "~3.0.2"
+  },
+  "devDependencies": {
+    "@nativescript/ios": "^8.6.3",
+    "@nativescript/types": "~8.6.1",
+    "@nativescript/webpack": "~5.0.18",
+    "@types/node": "^20.11.20",
+    "elm": "^0.19.1-6",
+    "elm-webpack-loader": "github:seanstrom/elm-webpack-loader#wrap-code",
+    "typescript": "~5.2.2"
+  }
+}
