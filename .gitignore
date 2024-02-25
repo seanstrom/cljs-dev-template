@@ -12,6 +12,7 @@ elm-stuff/
 .nrepl-port
 .clj-kondo/
 .shadow-cljs/
+.calva/
 
 # Dist Stuff
 cljs-dist/**/*
