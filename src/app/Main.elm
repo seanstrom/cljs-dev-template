@@ -1,23 +1,23 @@
 module Main exposing (main)
 
 import Browser
-import ConcurrentTask exposing (ConcurrentTask)
-import HelloWorld exposing (helloWorld)
+import ConcurrentTask
 import Html exposing (Html, div, img)
 import Html.Attributes exposing (src, style)
 import Json.Encode as Encode
-import Msg as ViewMsg
+import Main.View
 import Port
-import Port.Entity
-import Port.Message
+import Port.Hook
+import Port.Item
 import Port.Task
+import Stuff.HelloWorld exposing (helloWorld)
 import VitePluginHelper
 
 
 type Msg
-    = PortMsg Port.Message.Msg
+    = PortHook Port.Hook.Msg
     | PortTask Port.Task.Msg
-    | ViewMsg ViewMsg.Msg
+    | MainView Main.View.Msg
 
 
 type alias Model =
@@ -39,7 +39,7 @@ init flags =
                 , pool = ConcurrentTask.pool
                 , onComplete = Port.Task.OnComplete
                 }
-                Port.Entity.getAllTitles
+                Port.Item.getAllTitles
     in
     ( { tasks = tasks
       , count = 0
@@ -51,8 +51,8 @@ init flags =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
-        [ Port.Message.inbox <|
-            Port.receive PortMsg
+        [ Port.Hook.inbox <|
+            Port.receive PortHook
         , Sub.map PortTask <|
             ConcurrentTask.onProgress
                 { send = Port.Task.run
@@ -66,19 +66,19 @@ subscriptions model =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        ViewMsg ViewMsg.Increment ->
+        MainView Main.View.Increment ->
             ( { model | count = model.count + 1 }
             , Port.send <|
-                Port.Message.Payload
+                Port.Hook.Payload
                     { tag = "action:increment"
                     , value = Encode.int model.count
                     }
             )
 
-        ViewMsg ViewMsg.Decrement ->
+        MainView Main.View.Decrement ->
             ( { model | count = model.count - 1 }, Cmd.none )
 
-        PortMsg _ ->
+        PortHook _ ->
             let
                 _ =
                     Debug.log "IncomingMessage" ( model.count + 1, Cmd.none )
@@ -98,21 +98,20 @@ update msg model =
 
 view : Model -> Html Msg
 view model =
-    Html.map ViewMsg <|
-        div []
-            [ img
-                [ src <| VitePluginHelper.asset "/assets/logo.png"
-                , style "width" "300px"
-                ]
-                []
-            , helloWorld model.count
-            , Html.node "my-component"
-                [ model.count
-                    |> String.fromInt
-                    |> Html.Attributes.attribute "icon"
-                ]
-                [ Html.text <| "Component Text" ]
+    div []
+        [ img
+            [ src <| VitePluginHelper.asset "/assets/logo.png"
+            , style "width" "300px"
             ]
+            []
+        , Html.map MainView <| helloWorld model.count
+        , Html.node "my-component"
+            [ model.count
+                |> String.fromInt
+                |> Html.Attributes.attribute "icon"
+            ]
+            [ Html.text <| "Component Text" ]
+        ]
 
 
 main : Program () Model Msg

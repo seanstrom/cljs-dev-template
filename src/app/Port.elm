@@ -1,15 +1,15 @@
 module Port exposing (..)
 
-import Port.Message
+import Port.Hook
 
 
-receive : (Port.Message.Msg -> msg) -> Port.Message.Msg -> msg
+receive : (Port.Hook.Msg -> msg) -> Port.Hook.Msg -> msg
 receive toMsg message =
     case message of
         _ ->
             toMsg message
 
 
-send : Port.Message.Payload -> Cmd msg
+send : Port.Hook.Payload -> Cmd msg
 send payload =
-    Port.Message.outbox <| Port.Message.encode payload
+    Port.Hook.outbox <| Port.Hook.encode payload

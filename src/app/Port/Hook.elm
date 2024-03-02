@@ -1,4 +1,4 @@
-port module Port.Message exposing
+port module Port.Hook exposing
     ( Msg
     , Payload(..)
     , empty

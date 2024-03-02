@@ -1,4 +1,4 @@
-module Port.Entity exposing (..)
+module Port.Item exposing (..)
 
 import ConcurrentTask exposing (ConcurrentTask)
 import ConcurrentTask.Http as Http
