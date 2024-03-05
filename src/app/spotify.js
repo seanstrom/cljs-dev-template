@@ -48,6 +48,15 @@ function loadSpotifyDeviceAPI({ accessToken }) {
   });
 }
 
+export async function resumePlayer() {
+  console.log("resume")
+  await window.player.resume()
+  console.log("resume haha")
+  const state = await window.player.getCurrentState()
+  console.log("is paused", state.paused)
+  return state.paused
+}
+
 async function playSongs(spotify, deviceId, playlistId) {
   const playlist = await spotify.playlists.getPlaylist(playlistId);
   const tracks = playlist.tracks.items.map((item) => item.track.uri);

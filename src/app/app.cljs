@@ -42,7 +42,8 @@
        (.addListener player "not_ready"
                      (fn [^js _event]))
        (.addListener player "player_state_changed"
-                     (fn [^js _state]))
+                     (fn [^js _state]
+                       (js/console.log "huh" _state)))
        (.connect player)))))
 
 (defn load-spotify-device-api [{:keys [access-token]}]
