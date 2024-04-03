@@ -42,7 +42,7 @@
 
 (def clock-state-default {:status :idle
                           :timer nil
-                          :wages-per-second 0.0067
+                          :wages-per-second 0.01005
                           :counted-seconds 0})
 
 (defonce app-state (r/atom {:clock-state clock-state-default}))
