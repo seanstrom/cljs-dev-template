@@ -8,75 +8,7 @@
    [goog.dom :as gdom]
    ["react" :as react]))
 
-(defn format-time [seconds]
-  (let [hours (int (/ seconds 3600))
-        minutes (int (/ (mod seconds 3600) 60))
-        seconds (mod seconds 60)
-        formatted-minutes (if (< minutes 10)
-                            (str "0" minutes)
-                            minutes)
-        formatted-seconds (if (< seconds 10)
-                            (str "0" seconds)
-                            seconds)]
-    (str hours ":" formatted-minutes ":" formatted-seconds)))
-
-(defn format-money [amount]
-  (let [dollars (int amount)
-        cents (int (* (mod amount 1) 100))
-        formatted-cents (if (< cents 10)
-                          (str "0" cents)
-                          cents)]
-    (str "£" dollars "." formatted-cents)))
-
-(defn app-clock [app-state dispatch]
-  (let [counted-seconds (ratom/cursor app-state [:clock-state :counted-seconds])
-        wages-per-second (ratom/cursor app-state [:clock-state :wages-per-second])
-        funds-raised (ratom/reaction
-                      (format-money (* @wages-per-second @counted-seconds)))]
-    [:div
-     [:h1 "Hey there Sean 👋"]
-     [:h2 "This much time has passed: " (format-time @counted-seconds)]
-     [:h2 "And this is how much that we've earned: " @funds-raised]
-     [:button {:on-click #(dispatch [:start-clock])} "Start"]
-     [:button {:on-click #(dispatch [:stop-clock])} "Stop"]
-     [:button {:on-click #(dispatch [:reset-clock])} "Reset"]]))
-
-(def clock-state-default {:status :idle
-                          :timer nil
-                          :wages-per-second 0.01005
-                          :counted-seconds 0})
-
-(defonce app-state (r/atom {:clock-state clock-state-default}))
-
-(defonce app-root (rdom-client/create-root
-                   (gdom/getElement "root")))
-
-(defn clock-dispatch [message clock-state]
-  (let [[message-id] message]
-    (case message-id
-      :start-clock (swap! clock-state
-                          (fn update [state]
-                            (merge state
-                                   {:status :running
-                                    :timer (js/setInterval
-                                            (fn []
-                                              (let [counted-seconds (ratom/cursor clock-state [:counted-seconds])]
-                                                (set! (.. js/document -title)
-                                                      (str (format-money (* (:wages-per-second state) @counted-seconds))
-                                                           " raised so far"))
-                                                (swap! counted-seconds inc)))
-                                            1000)})))
-      :stop-clock (swap! clock-state merge
-                         {:timer (js/clearInterval (:timer @clock-state))
-                          :status :idle})
-      :reset-clock (reset! (ratom/cursor clock-state [:counted-seconds]) 0))))
-
-(defn app-dispatch [message]
-  (let [[message-id] message]
-    (when (contains? #{:start-clock :stop-clock :reset-clock} message-id)
-      (clock-dispatch message (ratom/cursor app-state [:clock-state])))))
-
-;; ---
+;; --
 
 (def use-ref react/useRef)
 
@@ -129,6 +61,8 @@
   [handler]
   (use-mount (fn [] handler)))
 
+(def use-state react/useState)
+
 (defn use-callback
   ([handler]
    (use-callback handler []))
@@ -138,6 +72,36 @@
 (defn use-memo
   [handler deps]
   (react/useMemo handler (get-js-deps deps)))
+
+;; --
+
+(def ^:private lookup-sentinel (js-obj))
+
+(defn memo
+  "Returns a memoized version of a referentially transparent function. The
+  memoized version of the function keeps a cache of the mapping from arguments
+  to results and, when calls with the same arguments are repeated often, has
+  higher performance at the expense of higher memory use."
+  [mem f]
+  (fn [& args]
+    (js/console.log "lookup")
+    (let [v (get @mem args lookup-sentinel)]
+      (if (identical? v lookup-sentinel)
+        (let [ret (apply f args)]
+          (js/console.log "swap")
+          (swap! mem assoc args ret)
+          ret)
+        v))))
+
+;; --
+
+(defn |> [arg f]
+  (f arg))
+
+(defn <| [f arg]
+  (f arg))
+
+;; --
 
 (defn sample-ratom!
   [[ref ratom]]
@@ -153,42 +117,168 @@
     {:ref ref
      :sub (ratom/track sample-ratom! [ref ratom])}))
 
-(defn |> [arg f]
-  (f arg))
+(defn make-state-handler-factory
+  [{:keys [sub dispatch storage sample]}]
+  (memo storage
+        (fn [callback]
+          (js/console.log "init action callback")
+          (fn [event]
+            (callback (let [state @(:ref sample)]
+                        {:state state
+                         :dispatch (partial dispatch sub)})
+                      event)))))
 
-(defn make-state-samples
-  [state-ratom dispatch]
-  (let [live-sample (make-sample state-ratom)
-        snapshot-sample (make-sample (:sub live-sample))
-        factory (memoize
-                 (fn [callback]
-                   (js/console.log "init action callback")
-                   (fn [event]
-                     (callback (let [state @(:ref live-sample)
-                                     snapshot @(:ref snapshot-sample)]
-                                 {:state state
-                                  :snapshot snapshot
-                                  :dispatch (partial dispatch state-ratom)})
-                               event))))]
-    {:live live-sample
-     :snapshot snapshot-sample
-     :factory factory}))
-
-(defn use-bind
-  [state-ratom dispatch]
-  (let [{:keys [live snapshot factory]}
-        (use-memo (fn []
-                   (make-state-samples state-ratom dispatch))
-                 [state-ratom dispatch])]
-    (use-layout-effect
-     (fn []
-       @(:sub snapshot)
-       #(do (prn "layout cleanup"))))
+(defn use-bind-sub
+  [dispatch sub]
+  (let [storage (use-memo #(atom {}) [sub dispatch])
+        live-sample (use-memo #(make-sample sub) [sub])
+        factory (use-memo #(make-state-handler-factory
+                            {:sub sub
+                             :dispatch dispatch
+                             :storage storage
+                             :sample live-sample})
+                          [sub dispatch storage live-sample])]
     (use-unmount
      (fn []
-       #(do (ratom/dispose! (:sub snapshot))
-            (ratom/dispose! (:sub live)))))
+       #(do (ratom/dispose! (:sub live-sample))
+            (prn "dispose storage" storage))))
     factory))
+
+(defn use-bind-data
+  [dispatch data]
+  (let [storage (use-memo #(atom {}) [dispatch])
+        state-ratom (use-memo #(ratom/atom data) [dispatch])
+        snapshot-sample (use-memo #(make-sample state-ratom) [dispatch])
+        factory (use-memo #(make-state-handler-factory
+                            {:sub state-ratom
+                             :dispatch dispatch
+                             :storage storage
+                             :sample snapshot-sample})
+                          [state-ratom dispatch storage snapshot-sample])]
+    (use-effect #_use-layout-effect
+     (fn []
+       (print "effect")
+       (swap! state-ratom (fn [_] data))
+       js/undefined)
+                [data])
+    (use-unmount
+     (fn []
+       #(do (ratom/dispose! (:sub snapshot-sample))
+            (prn "dispose storage" storage))))
+    factory))
+
+;; --
+
+(defn button-component
+  [props text]
+  (js/console.log "render" text)
+  [:button props text])
+
+;;
+
+(defn format-time [seconds]
+  (let [hours (int (/ seconds 3600))
+        minutes (int (/ (mod seconds 3600) 60))
+        seconds (mod seconds 60)
+        formatted-minutes (if (< minutes 10)
+                            (str "0" minutes)
+                            minutes)
+        formatted-seconds (if (< seconds 10)
+                            (str "0" seconds)
+                            seconds)]
+    (str hours ":" formatted-minutes ":" formatted-seconds)))
+
+(defn format-money [amount]
+  (let [dollars (int amount)
+        cents (int (* (mod amount 1) 100))
+        formatted-cents (if (< cents 10)
+                          (str "0" cents)
+                          cents)]
+    (str "£" dollars "." formatted-cents)))
+
+(defn start-clock
+  [{:keys [dispatch _state]} _event]
+  (dispatch [:start-clock]))
+
+(defn stop-clock
+  [{:keys [dispatch _state]} _event]
+  (dispatch [:stop-clock]))
+
+(defn reset-clock
+  [{:keys [dispatch _state]} _event]
+  (dispatch [:reset-clock]))
+
+(defn buttons-component [dispatch state-sub]
+  (print "render" "buttons")
+  [:<>
+   [button-component
+    {:on-click ((use-bind-sub dispatch state-sub) start-clock)}
+    "Start"]
+   [button-component
+    {:on-click (<| (use-bind-sub dispatch state-sub) stop-clock)}
+    "Stop"]
+   [button-component
+    {:on-click (<| (use-bind-sub dispatch state-sub) reset-clock)}
+    "Reset"]])
+
+(defn controls-component
+  [dispatch state-sub]
+  (print "render" "controls component")
+  [buttons-component dispatch state-sub])
+
+(defn app-clock [dispatch state-sub]
+  (let [counted-seconds  (ratom/cursor state-sub [:clock-state :counted-seconds])
+        wages-per-second (ratom/cursor state-sub [:clock-state :wages-per-second])
+        funds-raised     (ratom/reaction
+                          (format-money (* @wages-per-second @counted-seconds)))]
+    [:div
+     [:h1 "Hey there Sean 👋"]
+     [:h2 "This much time has passed: " (format-time @counted-seconds)]
+     [:h2 "And this is how much that we've earned: " @funds-raised]
+     [controls-component dispatch state-sub]]))
+
+(def clock-state-default {:status :idle
+                          :timer nil
+                          :wages-per-second 0.01005
+                          :counted-seconds 0})
+
+(defonce app-state (r/atom {:clock-state clock-state-default}))
+
+(defonce app-root (rdom-client/create-root
+                   (gdom/getElement "root")))
+
+(defn clock-dispatch [clock-state-sub message]
+  (let [[message-id] message]
+    (case message-id
+      :start-clock (swap! clock-state-sub
+                          (fn update [state]
+                            (merge state
+                                   {:status :running
+                                    :timer (js/setInterval
+                                            (fn []
+                                              (let [counted-seconds (ratom/cursor clock-state-sub [:counted-seconds])]
+                                                (set! (.. js/document -title)
+                                                      (str (format-money (* (:wages-per-second state) @counted-seconds))
+                                                           " raised so far"))
+                                                (swap! counted-seconds inc)))
+                                            1000)})))
+      :stop-clock (swap! clock-state-sub merge
+                         {:timer (js/clearInterval (:timer @clock-state-sub))
+                          :status :idle})
+      :reset-clock (reset! (ratom/cursor clock-state-sub [:counted-seconds]) 0))))
+
+(defn app-dispatch [_app-state-sub message]
+  (js/console.log "message" message)
+
+  (print "before" @app-state)
+
+  (let [[message-id] message]
+    (when (contains? #{:start-clock :stop-clock :reset-clock} message-id)
+      (clock-dispatch (ratom/cursor app-state [:clock-state]) message)))
+
+  (print "after" @app-state))
+
+;; ---
 
 (defn on-click-component
   ;; Comment: 
@@ -196,29 +286,43 @@
   ;;     * readable state
   ;;     * app dispatch
   ;;     * and their related event.
-  [{:keys [state snapshot dispatch]} event]
-
-  (js/console.log "on-click snap" (clj->js snapshot))
+  [{:keys [dispatch state]} event]
   (js/console.log "on-click state" (clj->js state))
   (js/console.log "on-click event" event)
-  (when (= 0 (:count state))
+  (when (= 0 (:counter state))
     (js/console.log "init"))
-  (dispatch [:increment]))
+  (|> inc
+      (:set-counter state))
+  #_(dispatch [:increment]))
 
-(defn example-component [state dispatch]
-  (let [bind (use-bind state dispatch)]
+(defn example-component [dispatch state-ratom]
+  (js/console.log "render" "example component")
+  (let [bind (use-bind-sub dispatch state-ratom)
+        [counter set-counter] (use-state 0)
+        bind-state (use-bind-data dispatch
+                                  {:counter counter
+                                   :set-counter set-counter})
+        click-handler (bind-state on-click-component)
+        on-click (use-callback (fn [event]
+                                ;;  (dispatch state [:increment])
+                                ;;  (dispatch state [:increment])
+                                ;;  (dispatch state-ratom [:increment])
+                                 (|> event click-handler))
+                               [])]
     [:div
-     [:button {:on-click (bind on-click-component)}
-      "button"]
-     (:count @state)]))
+     [button-component {:on-click on-click}
+      "button one"]
+     [button-component {:on-click on-click}
+      "button two"]
+     counter]))
 
-(defn example-dispatch [state message]
+(defn example-dispatch [state-sub message]
   (let [[message-id] message]
     (js/console.log "message" message-id)
     (when (= message-id :increment)
-      (swap! state update-in [:count] inc))))
+      (swap! state-sub update-in [:counter] inc))))
 
-(defonce example-state (r/atom {:count 0}))
+(defonce example-state (ratom/atom {:counter 0}))
 
 ;; ---
 
@@ -227,8 +331,9 @@
 (r/set-default-compiler! functional-compiler)
 
 (defn ^:export render []
-  (println "[main]: render" @app-state)
-  (rdom-client/render app-root [example-component example-state example-dispatch]))
+  (println "[main]: render" @example-state)
+  (rdom-client/render app-root [app-clock app-dispatch app-state])
+  #_(rdom-client/render app-root [example-component example-dispatch example-state]))
 
 (defn component []
   (let [icon (useProp "icon")]
@@ -252,6 +357,7 @@
 ;; (.define js/customElements "my-component" (c component))
 
 (defn ^:dev/after-load start []
+  (js/console.log "after")
   (render))
 
 (comment
