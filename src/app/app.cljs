@@ -1,7 +1,10 @@
 (ns app.app
   (:require
    [malli.core :as m :refer [=>] :rename {=> sigf}]
-   ["atomico" :as atomico :refer [c html css useProp]]))
+   ["atomico" :as atomico :refer [c html css useProp]]
+   ["~src/app/app.gleam" :refer [add_one]]))
+
+(js/console.log "add_one" add_one)
 
 (defn ^:export render []
   (let [change-me "Hello"
