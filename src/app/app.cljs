@@ -1,4 +1,6 @@
 (ns app.app
+  (:require-macros
+   [app.compiler :refer [compile-hiccup read-fn-def]])
   (:require
    ["~src/app/app.gleam" :refer [add_one]]
    ["atomico" :as atomico :refer [c html css useProp]]
@@ -7,7 +9,19 @@
    [reagent.ratom :as ratom]
    [reagent.dom.client :as rdom-client]
    [goog.dom :as gdom]
-   ["react" :as react]))
+   ["react" :as react :refer [createElement Fragment]]))
+
+(defn create-element
+  ([f args]
+   (apply f args))
+  ([type config-js & child-or-children]
+   (if (nil? config-js)
+     (create-element (if (fn? type) type createElement) (conj nil child-or-children))
+     (create-element
+      (if (fn? type) type createElement)
+      (cond-> child-or-children
+        :always (conj config-js)
+        (not (fn? type)) (conj type))))))
 
 (js/console.log "add_one" add_one)
 
@@ -173,9 +187,10 @@
 ;; --
 
 (defn button-component
-  [props text]
+  [{:keys [onClick]} text]
   (js/console.log "render" text)
-  [:button props text])
+  (compile-hiccup
+   [:button {:on-click onClick} text]))
 
 ;;
 
@@ -211,25 +226,27 @@
   [{:keys [dispatch _state]} _event]
   (dispatch [:reset-clock]))
 
-(defn buttons-component [dispatch state-sub]
+(defn buttons-component [{:keys [dispatch state-sub]}]
   (print "render" "buttons")
-  [:<>
-   [button-component
-    {:on-click ((use-bind-sub dispatch state-sub) start-clock)}
-    "Start"]
-   [button-component
-    {:on-click (<| (use-bind-sub dispatch state-sub) stop-clock)}
-    "Stop"]
-   [button-component
-    {:on-click (<| (use-bind-sub dispatch state-sub) reset-clock)}
-    "Reset"]])
+  (let [action (use-bind-sub dispatch state-sub)]
+    (compile-hiccup [:div {:test "foo"}
+                                     [button-component
+                                      {:on-click (<| action start-clock)}
+                                      "Start"]
+                                     [button-component
+                                      {:on-click (<| action stop-clock)}
+                                      "Stop"]
+                                     [button-component
+                                      {:on-click (<| action reset-clock)}
+                                      "Reset"]])))
 
 (defn controls-component
-  [dispatch state-sub]
+  [{:keys [dispatch state-sub]}]
   (print "render" "controls component")
-  [buttons-component dispatch state-sub])
+  [buttons-component {:dispatch dispatch
+                      :state-sub state-sub}])
 
-(defn app-clock [dispatch state-sub]
+(defn app-clock [{:keys [dispatch state-sub]}]
   (let [counted-seconds  (ratom/cursor state-sub [:clock-state :counted-seconds])
         wages-per-second (ratom/cursor state-sub [:clock-state :wages-per-second])
         funds-raised     (ratom/reaction
@@ -238,11 +255,12 @@
      [:h1 "Hey there Sean 👋"]
      [:h2 "This much time has passed: " (format-time @counted-seconds)]
      [:h2 "And this is how much that we've earned: " @funds-raised]
-     [controls-component dispatch state-sub]]))
+     [controls-component {:dispatch dispatch
+                          :state-sub state-sub}]]))
 
 (def clock-state-default {:status :idle
                           :timer nil
-                          :wages-per-second 0.01005
+                          :wages-per-second 0.01
                           :counted-seconds 0})
 
 (defonce app-state (r/atom {:clock-state clock-state-default}))
@@ -268,7 +286,11 @@
       :stop-clock (swap! clock-state-sub merge
                          {:timer (js/clearInterval (:timer @clock-state-sub))
                           :status :idle})
-      :reset-clock (reset! (ratom/cursor clock-state-sub [:counted-seconds]) 0))))
+      :reset-clock (swap! clock-state-sub
+                          (fn [clock-state]
+                            (assoc clock-state
+                                   :counted-seconds 0
+                                   :wages-per-second (:wages-per-second clock-state-default)))))))
 
 (defn app-dispatch [_app-state-sub message]
   (js/console.log "message" message)
@@ -335,7 +357,9 @@
 
 (defn ^:export render []
   (println "[main]: render" @example-state)
-  (rdom-client/render app-root [app-clock app-dispatch app-state])
+
+  (rdom-client/render app-root [app-clock {:dispatch app-dispatch
+                                           :state-sub app-state}])
   #_(rdom-client/render app-root [example-component example-dispatch example-state]))
 
 (defn component []
