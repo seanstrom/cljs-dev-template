@@ -10,7 +10,7 @@
    [goog.dom :as gdom]
    ["atomico" :as atomico :refer [c html css useProp]]
    ["~src/app/app.gleam" :refer [add_one]]
-   ["lodash.shuffle" :as shuffle]
+  ;;  ["lodash.shuffle" :as shuffle]
    ["@spotify/web-api-ts-sdk" :refer [SpotifyApi, AuthorizationCodeWithPKCEStrategy]]
    ["~src/app/icons.js" :as icons]))
 
