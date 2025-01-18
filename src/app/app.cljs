@@ -1,5 +1,6 @@
 (ns app.app
   (:require
+   ["~src/app/app.gleam" :refer [add_one]]
    ["atomico" :as atomico :refer [c html css useProp]]
    [malli.core :as m :refer [=>] :rename {=> sigf}]
    [reagent.core :as r]
@@ -7,6 +8,8 @@
    [reagent.dom.client :as rdom-client]
    [goog.dom :as gdom]
    ["react" :as react]))
+
+(js/console.log "add_one" add_one)
 
 ;; --
 
