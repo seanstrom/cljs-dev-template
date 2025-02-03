@@ -6,7 +6,7 @@ html {
   font-size: 2rem;
 }
 
-html, body, #root, body > div {
+html, body, #root, body > div:first-child {
   display: flex;
   height: 100%;
   min-height: 100%;

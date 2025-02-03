@@ -4,7 +4,8 @@
   "description": "",
   "type": "module",
   "imports": {
-    "#cljs/*": "./cljs-dist/*"
+    "#cljs/*": "./cljs-dist/*",
+    "#elm/*": "./elm-dist"
   },
   "scripts": {
     "app-dev": "npm-run-all -p app-cljs-dev app-js-dev-wait",
@@ -14,10 +15,15 @@
     "app-js-dev": "vite --config vite.config.js --port 3000 src/app/ --host 0.0.0.0",
     "app-js-prod": "vite build --emptyOutDir --outDir ../dist/app src/app/",
     "server-dev": "npm-run-all -p server-cljs-dev server-js-dev-wait",
+    "server-vite-dev": "bunx --bun vite -c $WORKSPACE/vite.config.server.js",
     "server-cljs-dev": "shadow-cljs watch :server",
     "server-cljs-prod": "shadow-cljs release :server --pseudo-names",
     "server-js-dev-wait": "wait-on ./cljs-dist/server/server.main.js && npm run server-js-dev",
     "server-js-dev": "nodemon -w ./src/server/*.js src/server/server.js",
+    "server-elm-dev": "npm-run-all server-elm-live-dev server-elm-wrap-dev-wait",
+    "server-elm-live-dev": "elm-live src/server/Server.elm --no-server --no-reload -- --output=$WORKSPACE/elm-dist/server.elm.raw.js",
+    "server-elm-wrap-dev-wait": "wait-on ./elm-dist/server.elm.raw.js && npm run server-elm-wrap-dev",
+    "server-elm-wrap-dev": "bun wrap-elm.js $WORKSPACE/elm-dist/server.elm.raw.js $WORKSPACE/elm-dist/server.elm.js",
     "server-js-bundle-wait": "wait-on ./cljs-dist/server/server.main.js && npm run server-js-bundle",
     "server-js-bundle": "esbuild ./src/server/server.js --platform=node --bundle --minify --outfile=./dist/server.js",
     "server-js-bin-wait": "wait-on ./dist/server.js && npm run server-js-bin",
@@ -36,7 +42,10 @@
   "devDependencies": {
     "@elm-tooling/elm-language-server": "^2.8.0",
     "autoprefixer": "^10.4.16",
+    "chokidar": "^4.0.3",
     "clj-kondo": "^2023.5.26",
+    "cors": "^2.8.5",
+    "elm-live": "^4.0.2",
     "elm-tooling": "^1.15.0",
     "esbuild": "^0.18.6",
     "nodemon": "^2.0.22",
@@ -46,19 +55,24 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "shadow-cljs": "^2.27.1",
+    "superagent": "^10.1.1",
     "tailwindcss": "^3.4.1",
     "typescript": "^5.3.3",
-    "vite": "^5.0.12",
+    "vite": "^5.4.14",
     "vite-gleam": "^0.4.0",
     "vite-node": "^0.29.8",
     "vite-plugin-elm": "^2.9.0",
+    "vite-plugin-elm-watch": "^1.4.1",
+    "vite-plugin-node": "^4.0.0",
     "wait-on": "^7.0.1",
     "ws": "^8.13.0"
   },
   "dependencies": {
     "@andrewmacmurray/elm-concurrent-task": "^1.1.0",
     "@spotify/web-api-ts-sdk": "^1.2.0",
+    "@xmldom/xmldom": "^0.9.7",
     "atomico": "^1.75.2",
+    "express": "^4.21.2",
     "lodash.shuffle": "^4.2.0"
   }
 }

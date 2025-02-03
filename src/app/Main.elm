@@ -1,7 +1,8 @@
 module Main exposing (main)
 
+import Bridge
 import Browser
-import ConcurrentTask exposing (ConcurrentTask)
+import ConcurrentTask
 import Html exposing (Html, button, div, img)
 import Html.Attributes exposing (class, src, style)
 import Html.Events exposing (onClick)
@@ -10,7 +11,6 @@ import Json.Encode as Encode
 import Main.View
 import Port
 import Port.Hook
-import Port.Item
 import Port.Task
 import Stuff.HelloWorld exposing (helloWorld)
 import Stuff.Icons as Icons
@@ -56,16 +56,48 @@ resumePlayer =
         |> ConcurrentTask.map Port.Task.Playing
 
 
+sendBackendMsg : Encode.Value -> ConcurrentTask.ConcurrentTask x Bridge.FromBackendMsg
+sendBackendMsg args =
+    ConcurrentTask.define
+        { function = "sendBackendMsg"
+        , expect = ConcurrentTask.expectJson Bridge.backendReplyDecoder
+        , errors = ConcurrentTask.expectNoErrors
+        , args = args
+        }
+
+
+runTask task =
+    ConcurrentTask.attempt
+        { send = Port.Task.run
+        , pool = ConcurrentTask.pool
+        , onComplete = Port.Task.OnComplete
+        }
+        task
+
+
+watchTasks tasks =
+    ConcurrentTask.onProgress
+        { send = Port.Task.run
+        , receive = Port.Task.track
+        , onProgress = Port.Task.OnProgress
+        }
+        tasks
+
+
+getPlaylist deviceId =
+    Bridge.GetSpotifyPlaylist { playlistId = "37i9dQZEVXcD8aCW1Jk6NB" }
+        |> Bridge.backendMsgEncode
+        |> sendBackendMsg
+        |> ConcurrentTask.map Port.Task.FromBackend
+
+
 init : () -> ( Model, Cmd Msg )
 init flags =
     let
         ( tasks, cmd ) =
-            ConcurrentTask.attempt
-                { send = Port.Task.run
-                , pool = ConcurrentTask.pool
-                , onComplete = Port.Task.OnComplete
-                }
-                bootSpotify
+            bootSpotify
+                |> ConcurrentTask.andThen getPlaylist
+                |> runTask
     in
     ( { tasks = tasks
       , paused = True
@@ -81,12 +113,7 @@ subscriptions model =
         [ Port.Hook.inbox <|
             Port.receive PortHook
         , Sub.map PortTask <|
-            ConcurrentTask.onProgress
-                { send = Port.Task.run
-                , receive = Port.Task.track
-                , onProgress = Port.Task.OnProgress
-                }
-                model.tasks
+            watchTasks model.tasks
         ]
 
 
@@ -114,12 +141,7 @@ update msg model =
         MainView Main.View.Resume ->
             let
                 ( tasks, cmd ) =
-                    ConcurrentTask.attempt
-                        { send = Port.Task.run
-                        , pool = model.tasks
-                        , onComplete = Port.Task.OnComplete
-                        }
-                        resumePlayer
+                    runTask resumePlayer
             in
             ( { model
                 | paused = False
@@ -150,6 +172,13 @@ update msg model =
                     Debug.log "Resume" isPaused
             in
             ( { model | paused = isPaused }, Cmd.none )
+
+        PortTask (Port.Task.OnComplete (ConcurrentTask.Success (Port.Task.FromBackend payload))) ->
+            let
+                _ =
+                    Debug.log "payload" payload
+            in
+            ( model, Cmd.none )
 
         PortTask (Port.Task.OnComplete response) ->
             let

@@ -49,16 +49,17 @@ function loadSpotifyDeviceAPI({ accessToken }) {
 }
 
 export async function resumePlayer() {
-  console.log("resume")
   await window.player.resume()
-  console.log("resume haha")
-  const state = await window.player.getCurrentState()
-  console.log("is paused", state.paused)
-  return state.paused
+  return new Promise((resolve, _reject) => {
+    setTimeout(async () => {
+      const state = await window.player.getCurrentState()
+      console.log("is paused", state.paused)
+      resolve(state.paused)
+    }, 1000)
+  })
 }
 
-async function playSongs(spotify, deviceId, playlistId) {
-  const playlist = await spotify.playlists.getPlaylist(playlistId);
+async function playSongs(spotify, deviceId, playlist) {
   const tracks = playlist.tracks.items.map((item) => item.track.uri);
   await spotify.player.startResumePlayback(
     deviceId,
@@ -95,13 +96,27 @@ export async function boot(env) {
     .then((token) => token?.access_token);
 
   const deviceId = await loadSpotifyDeviceAPI({ accessToken });
-  const response = await spotify.search("Discover Weekly", ["playlist"]);
-  const playlist = response.playlists.items.find(
-    (item) =>
-      item.name === "Discover Weekly" && item.owner.display_name === "Spotify"
-  );
+  const playlistId = "37i9dQZEVXcD8aCW1Jk6NB";
 
-  if (playlist && deviceId) {
-    await playSongs(spotify, deviceId, playlist.id);
+  if (deviceId && playlistId) {
+    // https://open.spotify.com/embed/playlist/37i9dQZEVXcD8aCW1Jk6NB
+    const embedHtmlRequest = await fetch(`http://localhost:3100/spotifyEmbed?playlistId=${playlistId}`);
+    const data = await embedHtmlRequest.json()
+    const embedHtml = data.html
+
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(embedHtml, "text/html");
+    const element = doc.getElementById("__NEXT_DATA__");
+    const embedProps = JSON.parse(element.text);
+    const embedEntity = embedProps.props.pageProps.state.data.entity;
+
+    const playlistEmbed = {
+      tracks: {
+        items: embedEntity.trackList.map(track => ({ track }))
+      },
+    };
+    await playSongs(spotify, deviceId, playlistEmbed)
   }
+
+  return { deviceId, spotify }
 }

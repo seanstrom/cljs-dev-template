@@ -18,5 +18,6 @@ elm-stuff/
 build/
 cljs-dist/**/*
 !cljs-dist/.gitkeep
+!elm-dist/.gitkeep
 dist/**/*
 !dist/.gitkeep

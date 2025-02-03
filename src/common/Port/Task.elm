@@ -1,7 +1,9 @@
 port module Port.Task exposing (..)
 
-import ConcurrentTask exposing (ConcurrentTask)
+import Bridge
+import ConcurrentTask
 import ConcurrentTask.Http as Http
+import Json.Decode
 import Json.Encode as JE
 
 
@@ -30,6 +32,8 @@ type Success
     = Dashboard DashboardPayload
     | Whatever ()
     | Playing Bool
+    | FromBackend Bridge.FromBackendMsg
+    | SpotifyEmbedHtml String
 
 
 type alias DashboardPayload =
