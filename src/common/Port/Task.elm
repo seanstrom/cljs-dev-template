@@ -3,7 +3,6 @@ port module Port.Task exposing (..)
 import Bridge
 import ConcurrentTask
 import ConcurrentTask.Http as Http
-import Json.Decode
 import Json.Encode as JE
 
 
@@ -34,6 +33,7 @@ type Success
     | Playing Bool
     | FromBackend Bridge.FromBackendMsg
     | SpotifyEmbedHtml String
+    | SpotifyContext Bridge.SpotifyContext
 
 
 type alias DashboardPayload =

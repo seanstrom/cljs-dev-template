@@ -43,6 +43,21 @@ type alias CodecHelper msg a =
     }
 
 
+type alias SpotifyContext =
+    { spotify : Decode.Value
+    , accessToken : String
+    , deviceId : String
+    }
+
+
+spotifyContextCodec =
+    Codec.object SpotifyContext
+        |> Codec.field "spotify" .spotify Codec.value
+        |> Codec.field "accessToken" .accessToken Codec.string
+        |> Codec.field "deviceId" .deviceId Codec.string
+        |> Codec.buildObject
+
+
 playlistRequestInfoCodec =
     Codec.object PlaylistRequestInfo
         |> Codec.field "playlistId" .playlistId Codec.string

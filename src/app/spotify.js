@@ -59,8 +59,8 @@ export async function resumePlayer() {
   })
 }
 
-async function playSongs(spotify, deviceId, playlist) {
-  const tracks = playlist.tracks.items.map((item) => item.track.uri);
+export async function playPlaylist(spotify, deviceId, playlist) {
+  const tracks = playlist.trackList.map((track) => track.uri);
   await spotify.player.startResumePlayback(
     deviceId,
     undefined,
@@ -96,27 +96,34 @@ export async function boot(env) {
     .then((token) => token?.access_token);
 
   const deviceId = await loadSpotifyDeviceAPI({ accessToken });
-  const playlistId = "37i9dQZEVXcD8aCW1Jk6NB";
 
+  return {
+    accessToken,
+    deviceId,
+    spotify
+  }
+}
+
+export const API_HOST = "http://localhost:3100" 
+
+export async function loadAndPlayPlaylist(spotify, deviceId, playlistId) {
   if (deviceId && playlistId) {
-    // https://open.spotify.com/embed/playlist/37i9dQZEVXcD8aCW1Jk6NB
-    const embedHtmlRequest = await fetch(`http://localhost:3100/spotifyEmbed?playlistId=${playlistId}`);
+    const embedHtmlRequest = await fetch(`${API_HOST}/spotifyEmbed?playlistId=${playlistId}`);
     const data = await embedHtmlRequest.json()
     const embedHtml = data.html
 
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(embedHtml, "text/html");
-    const element = doc.getElementById("__NEXT_DATA__");
-    const embedProps = JSON.parse(element.text);
-    const embedEntity = embedProps.props.pageProps.state.data.entity;
+    const parser = new DOMParser()
+    const doc = parser.parseFromString(embedHtml, "text/html")
+    const element = doc.getElementById("__NEXT_DATA__")
+    const embedProps = JSON.parse(element.text)
+    const embedEntity = embedProps.props.pageProps.state.data.entity
 
     const playlistEmbed = {
       tracks: {
         items: embedEntity.trackList.map(track => ({ track }))
       },
-    };
-    await playSongs(spotify, deviceId, playlistEmbed)
-  }
+    }
 
-  return { deviceId, spotify }
+    await playPlaylist(spotify, deviceId, playlistEmbed)
+  }
 }

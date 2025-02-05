@@ -2,6 +2,7 @@ module Main exposing (main)
 
 import Bridge
 import Browser
+import Codec
 import ConcurrentTask
 import Html exposing (Html, button, div, img)
 import Html.Attributes exposing (class, src, style)
@@ -31,6 +32,7 @@ type alias Model =
             Port.Task.Success
     , paused : Bool
     , count : Int
+    , spotifyContext : Maybe Bridge.SpotifyContext
     }
 
 
@@ -38,9 +40,37 @@ bootSpotify : ConcurrentTask.ConcurrentTask x Port.Task.Success
 bootSpotify =
     ConcurrentTask.define
         { function = "boot"
-        , expect = ConcurrentTask.expectWhatever
+        , expect = ConcurrentTask.expectJson (Codec.decoder Bridge.spotifyContextCodec)
         , errors = ConcurrentTask.expectNoErrors
         , args = Encode.null
+        }
+        |> ConcurrentTask.map Port.Task.SpotifyContext
+
+
+type alias PlayPlaylistArgs =
+    { spotifyContext : Bridge.SpotifyContext
+    , playlist : Bridge.Playlist
+    }
+
+
+playPlaylistArgsCodec =
+    Codec.object PlayPlaylistArgs
+        |> Codec.field "spotifyContext" .spotifyContext Bridge.spotifyContextCodec
+        |> Codec.field "playlist" .playlist Bridge.playlistCodec
+        |> Codec.buildObject
+
+
+playPlaylist : Bridge.SpotifyContext -> Bridge.Playlist -> ConcurrentTask.ConcurrentTask x Port.Task.Success
+playPlaylist spotifyContext playlist =
+    ConcurrentTask.define
+        { function = "playPlaylist"
+        , expect = ConcurrentTask.expectWhatever
+        , errors = ConcurrentTask.expectNoErrors
+        , args =
+            Codec.encodeToValue playPlaylistArgsCodec <|
+                { spotifyContext = spotifyContext
+                , playlist = playlist
+                }
         }
         |> ConcurrentTask.map Port.Task.Whatever
 
@@ -84,8 +114,8 @@ watchTasks tasks =
         tasks
 
 
-getPlaylist deviceId =
-    Bridge.GetSpotifyPlaylist { playlistId = "37i9dQZEVXcD8aCW1Jk6NB" }
+getPlaylist playlistId =
+    Bridge.GetSpotifyPlaylist { playlistId = playlistId }
         |> Bridge.backendMsgEncode
         |> sendBackendMsg
         |> ConcurrentTask.map Port.Task.FromBackend
@@ -94,14 +124,36 @@ getPlaylist deviceId =
 init : () -> ( Model, Cmd Msg )
 init flags =
     let
+        playlistId =
+            "37i9dQZEVXcD8aCW1Jk6NB"
+
+        autoPlayWithContextAndPlaylist : Bridge.SpotifyContext -> Port.Task.Success -> ConcurrentTask.ConcurrentTask x Port.Task.Success
+        autoPlayWithContextAndPlaylist spotifyContext msg =
+            case msg of
+                Port.Task.FromBackend (Bridge.GotSpotifyPlaylist playlist) ->
+                    playPlaylist spotifyContext playlist
+
+                _ ->
+                    ConcurrentTask.succeed <| Port.Task.Whatever ()
+
+        autoPlayWithContext msg =
+            case msg of
+                Port.Task.SpotifyContext spotifyContext ->
+                    getPlaylist playlistId
+                        |> ConcurrentTask.andThen (autoPlayWithContextAndPlaylist spotifyContext)
+
+                _ ->
+                    ConcurrentTask.succeed <| Port.Task.Whatever ()
+
         ( tasks, cmd ) =
             bootSpotify
-                |> ConcurrentTask.andThen getPlaylist
+                |> ConcurrentTask.andThen autoPlayWithContext
                 |> runTask
     in
     ( { tasks = tasks
       , paused = True
       , count = 0
+      , spotifyContext = Nothing
       }
     , Cmd.map PortTask cmd
     )
@@ -179,6 +231,9 @@ update msg model =
                     Debug.log "payload" payload
             in
             ( model, Cmd.none )
+
+        PortTask (Port.Task.OnComplete (ConcurrentTask.Success (Port.Task.SpotifyContext spotifyContext))) ->
+            ( { model | spotifyContext = Just spotifyContext }, Cmd.none )
 
         PortTask (Port.Task.OnComplete response) ->
             let

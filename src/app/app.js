@@ -3,7 +3,7 @@ import * as ConcurrentTask from "@andrewmacmurray/elm-concurrent-task";
 // import { Elm } from "./Main.elm"
 import Main from "./Main.elm"
 import './app.css'
-import { boot, resumePlayer } from './spotify.js'
+import { boot, playPlaylist, resumePlayer } from './spotify.js'
 
 import { add_one } from "./app.gleam"
 
@@ -16,7 +16,10 @@ window.onload = () => {
 
   const elm = Main.init({
     // const elm = Elm.Main.init({
-    node: document.getElementById("root")
+    node: document.getElementById("root"),
+    flags: {
+      playlistId: "37i9dQZEVXcD8aCW1Jk6NB",
+    },
   })
 
   elm.ports.outbox?.subscribe((msg) => {
@@ -38,14 +41,19 @@ window.onload = () => {
 
   ConcurrentTask.register({
     tasks: {
-      "boot": (args) => {
-        const { spotify, deviceId } = boot(import.meta.env)
-        return deviceId
+      boot: (args) => {
+        return boot(import.meta.env)
       },
-      "resumePlayer": (args) => {
-        resumePlayer()
+
+      playPlaylist: async ({ spotifyContext, playlist }) => {
+        await playPlaylist(spotifyContext.spotify, spotifyContext.deviceId, playlist)
       },
-      "sendBackendMsg": async (msg) => {
+      
+      resumePlayer: async (args) => {
+        return await resumePlayer()
+      },
+
+      sendBackendMsg: async (msg) => {
         const response = await fetch("http://localhost:3100/backendMsg", {
           method: "POST",
           headers: {
