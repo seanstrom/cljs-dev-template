@@ -17,7 +17,7 @@
     "server-cljs-dev": "shadow-cljs watch :server",
     "server-cljs-prod": "shadow-cljs release :server --pseudo-names",
     "server-js-dev-wait": "wait-on ./cljs-dist/server/server.main.js && npm run server-js-dev",
-    "server-js-dev": "nodemon -w ./src/server/*.js src/server/server.js",
+    "server-js-dev": "bunx --bun vite -c ./vite.config.server.js",
     "server-js-bundle-wait": "wait-on ./cljs-dist/server/server.main.js && npm run server-js-bundle",
     "server-js-bundle": "esbuild ./src/server/server.js --platform=node --bundle --minify --outfile=./dist/server.js",
     "server-js-bin-wait": "wait-on ./dist/server.js && npm run server-js-bin",
