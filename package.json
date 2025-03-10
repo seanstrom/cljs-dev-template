@@ -46,15 +46,17 @@
     "shadow-cljs": "^2.25.3",
     "tailwindcss": "^3.4.1",
     "typescript": "^5.3.3",
-    "vite": "^4.2.1",
+    "vite": "^5.4.14",
     "vite-gleam": "^0.4.0",
     "vite-node": "^0.29.8",
     "vite-plugin-elm": "^2.9.0",
+    "vite-plugin-node": "^4.0.0",
     "wait-on": "^7.0.1",
     "ws": "^8.13.0"
   },
   "dependencies": {
     "@andrewmacmurray/elm-concurrent-task": "^1.1.0",
-    "atomico": "^1.75.2"
+    "atomico": "^1.75.2",
+    "uuid": "^10.0.0"
   }
 }
