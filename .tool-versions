@@ -4,3 +4,4 @@ clojure 1.11.1.1189
 java adoptopenjdk-17.0.7+7
 gleam 0.33.0
 elm 0.19.1
+bun 1.1.3
